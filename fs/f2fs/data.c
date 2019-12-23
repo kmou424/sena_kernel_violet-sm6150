@@ -32,6 +32,7 @@
 #define NUM_PREALLOC_POST_READ_CTXS	128
 
 static struct kmem_cache *bio_post_read_ctx_cache;
+static struct kmem_cache *bio_entry_slab;
 static mempool_t *bio_post_read_ctx_pool;
 
 static bool __is_cp_guaranteed(struct page *page)
@@ -126,10 +127,8 @@ static bool f2fs_bio_post_read_required(struct bio *bio)
 static void f2fs_read_end_io(struct bio *bio)
 {
 #ifdef CONFIG_F2FS_FAULT_INJECTION
-	if (time_to_inject(F2FS_P_SB(bio->bi_io_vec->bv_page), FAULT_IO)) {
-		f2fs_show_injection_info(FAULT_IO);
-		bio->bi_status = BLK_STS_IOERR;
-	}
+	f2fs_show_injection_info(sbi, FAULT_READ_IO);
+	bio->bi_status = BLK_STS_IOERR;
 #endif
 
 	if (f2fs_bio_post_read_required(bio)) {
@@ -148,6 +147,9 @@ static void f2fs_write_end_io(struct bio *bio)
 	struct f2fs_sb_info *sbi = bio->bi_private;
 	struct bio_vec *bvec;
 	int i;
+
+	f2fs_show_injection_info(sbi, FAULT_WRITE_IO);
+	bio->bi_status = BLK_STS_IOERR;
 
 	bio_for_each_segment_all(bvec, bio, i) {
 		struct page *page = bvec->bv_page;
@@ -1874,7 +1876,7 @@ static int __write_data_page(struct page *page, bool *submitted,
 	loff_t i_size = i_size_read(inode);
 	const pgoff_t end_index = ((unsigned long long) i_size)
 							>> PAGE_SHIFT;
-	loff_t psize = (page->index + 1) << PAGE_SHIFT;
+	loff_t psize = (loff_t)(page->index + 1) << PAGE_SHIFT;
 	unsigned offset = 0;
 	bool need_balance_fs = false;
 	int err = 0;
@@ -2101,7 +2103,7 @@ continue_unlock:
 			if (PageWriteback(page)) {
 				if (wbc->sync_mode != WB_SYNC_NONE)
 					f2fs_wait_on_page_writeback(page,
-								DATA, true);
+							DATA, true);
 				else
 					goto continue_unlock;
 			}
@@ -2773,8 +2775,22 @@ fail:
 	return -ENOMEM;
 }
 
-void __exit f2fs_destroy_post_read_processing(void)
+void f2fs_destroy_post_read_processing(void)
 {
 	mempool_destroy(bio_post_read_ctx_pool);
 	kmem_cache_destroy(bio_post_read_ctx_cache);
+}
+
+int __init f2fs_init_bio_entry_cache(void)
+{
+	bio_entry_slab = f2fs_kmem_cache_create("bio_entry_slab",
+			sizeof(struct bio_entry));
+	if (!bio_entry_slab)
+		return -ENOMEM;
+	return 0;
+}
+
+void __exit f2fs_destroy_bio_entry_cache(void)
+{
+	kmem_cache_destroy(bio_entry_slab);
 }
