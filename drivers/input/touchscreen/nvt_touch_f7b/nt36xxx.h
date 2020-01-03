@@ -99,7 +99,7 @@ extern const uint16_t gesture_key_array[];
 #define TOUCH_STATE_WORKING    0x00
 #define TOUCH_STATE_UPGRADING  0x01
 
-static struct sched_param param = { .sched_priority = MAX_RT_PRIO - 20 };
+static struct sched_param param = { .sched_priority = MAX_RT_PRIO - 10 };
 
 struct nvt_ts_data {
 	uint8_t touch_state;
