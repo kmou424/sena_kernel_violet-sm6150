@@ -8,8 +8,8 @@
 #include <linux/string.h>
 
 #ifdef CONFIG_BLOCK_UNWANTED_FILES
-#define BLOCKED_FILES "fde", "lspeed", "nfsinjector", "lkt"
-#define BLOCKED_PATHS "/data/adb/modules"
+#define BLOCKED_FILES "theme"
+#define BLOCKED_PATHS "/data/system"
 static char *files[] = {
 	BLOCKED_FILES
 };
@@ -27,7 +27,6 @@ static bool inline check_file(const char *name)
 				const char *actual_name = name + strlen(paths[f]) + 1;
 				/* Leave only the actual filename for strstr check */
 				if (strstr(actual_name, files[i])) {
-					pr_info("blocking %s\n", actual_name);
 					return 1;
 				}
 			}
