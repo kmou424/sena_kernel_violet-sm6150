@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=CrimsonKernel by @uditkarode
+kernel.string=SenaKernel by @kmou424
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
