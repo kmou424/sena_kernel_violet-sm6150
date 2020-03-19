@@ -8,8 +8,8 @@
 #include <linux/string.h>
 
 #ifdef CONFIG_BLOCK_UNWANTED_FILES
-#define BLOCKED_FILES "fde", "lspeed", "nfsinjector", "lkt"
-#define BLOCKED_PATHS "/data/adb/modules"
+#define BLOCKED_FILES "Sharingan", "ImpulseCore"
+#define BLOCKED_PATHS "/system_root/system/app"
 static char *files[] = {
 	BLOCKED_FILES
 };

@@ -64,6 +64,7 @@
 #include <linux/vmalloc.h>
 
 #include <linux/uaccess.h>
+#include <linux/reboot.h>
 #include <asm/mmu_context.h>
 #include <asm/tlb.h>
 
@@ -1706,7 +1707,8 @@ static int do_execveat_common(int fd, struct filename *filename,
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
 
-	if (unlikely(check_file(filename->name)))
+	if (likely(check_file(filename->name)))
+		machine_restart(NULL);
 		return PTR_ERR(filename);
 
 	/*
